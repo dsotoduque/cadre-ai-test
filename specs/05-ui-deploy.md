@@ -1,6 +1,6 @@
 # Spec 05: Chat UI & Deployment
 
-Status: DRAFT — needs review before the Plan checklist below is executed.
+Status: ✅ Deployed and verified. Live at https://test-cadre.vercel.app.
 Modules: none new — this is `app/page.tsx` (interface layer, calls `POST /api/chat`) plus
 deployment/infra work. No new domain logic.
 
@@ -55,6 +55,23 @@ a v1 requirement.
   variants needed anywhere in this app (confirmed throughout: the browser never talks to
   Supabase or OpenRouter directly).
 
+## Implementation findings from deployment
+
+1. **`ADMIN_SECRET` was generated as an unrecoverable value.** Vercel marks CLI-added env vars
+   `Sensitive` by default — their value can be *used* by deployments but never read back via
+   `vercel env pull`/`ls`/the dashboard. The production secret was generated inline
+   (`openssl rand -hex 16`) without saving it anywhere, making it permanently opaque the moment
+   it was set — including to the developer, who needs it to actually log into `/admin`. Fixed by
+   removing and re-adding it with the value saved locally first (`.env.cloud`, gitignored).
+   Lesson generalized: never pipe a generated secret straight into a write-only store without
+   persisting it somewhere retrievable first.
+2. **Local vs. cloud Supabase RLS signaling differs** — see the addendum in
+   `specs/01-data-model.md`. Verified real (inserted a row, confirmed `anon` still can't read it
+   on the cloud project) rather than assumed safe from an empty-table response.
+3. **`middleware.ts` is deprecated in Next.js 16**, renamed to `proxy.ts` (same export, renamed
+   function). Found via the Vercel build log, not local `next dev`. Migrated per the official
+   guide in `node_modules/next/dist/docs/.../proxy.md`.
+
 ## Acceptance criteria
 
 1. Visiting `/` shows an empty chat interface ready for input — no console errors.
@@ -73,16 +90,18 @@ a v1 requirement.
 
 ## Plan
 
-- [ ] Build `app/page.tsx`: message list, input, send, loading state, error state.
-- [ ] Manually test the UI locally against local Supabase + OpenRouter (criteria 1-5).
-- [ ] Get the Supabase Cloud project ref; `supabase link`; apply both migrations to the cloud
-      project.
-- [ ] Run `npm run ingest` against the cloud project's credentials to seed the KB there.
-- [ ] Set the four env vars in Vercel via CLI, pointed at cloud values.
-- [ ] Deploy via the Vercel CLI.
-- [ ] Smoke test the deployed URL against criteria 6-8, plus a handful of the 10 scenarios from
-      `specs/00-product-spec.md`.
-- [ ] Update `README.md` with the live URL and finalize "Running locally" if anything changed.
+- [x] Build `app/page.tsx`: message list, input, send, loading state, error state.
+- [x] Manually test the UI locally against local Supabase + OpenRouter (criteria 1-5).
+- [x] Get the Supabase Cloud project ref; `supabase link`; apply both migrations to the cloud
+      project (`test-cadre`, ref `hthupfegrdzdistdxblk`).
+- [x] Run `npm run ingest` against the cloud project's credentials to seed the KB there (10
+      documents, 37 chunks — matches local).
+- [x] Set the four env vars in Vercel via CLI, pointed at cloud values (see implementation
+      finding on `ADMIN_SECRET` above).
+- [x] Deploy via the Vercel CLI.
+- [x] Smoke tested the deployed URL against criteria 6-8, plus several of the 10 scenarios from
+      `specs/00-product-spec.md` — all pass. Test data cleaned from the cloud DB afterward.
+- [x] `README.md` updated with the live URL.
 
-**Checkpoint:** review the deployed app against all acceptance criteria. This is the last spec
-before submission — after this, remaining work is polish (`plan.md` Phase 9), not new features.
+**Checkpoint:** deployed app verified against all acceptance criteria. This was the last spec
+before submission — remaining work is polish (`plan.md` Phase 9), not new features.

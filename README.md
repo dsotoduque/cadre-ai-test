@@ -4,8 +4,10 @@ A customer support chatbot for Cadre AI, built as a take-home evaluation. It ans
 inbound questions about Cadre AI's business — grounded in real content from cadreai.com — and
 escalates to a human-reviewable lead when it doesn't have the answer.
 
-> Status: architecture + specs drafted, implementation not started. See `plan.md` for the
-> execution phases and `specs/` for the approved scope.
+> **Live:** https://test-cadre.vercel.app
+>
+> Status: all 6 specs implemented and verified (locally and against the deployed app). See
+> `plan.md` for the execution phases and `specs/` for design decisions and acceptance criteria.
 
 ## Stack
 
