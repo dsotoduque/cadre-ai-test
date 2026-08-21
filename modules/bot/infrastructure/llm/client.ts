@@ -18,16 +18,13 @@ function getClient(): OpenAI {
 
 export async function callChatModel(params: {
   system: string;
-  userMessage: string;
+  messages: { role: "user" | "assistant"; content: string }[];
   tools: OpenAI.Chat.Completions.ChatCompletionTool[];
 }): Promise<OpenAI.Chat.Completions.ChatCompletionMessage> {
   const response = await getClient().chat.completions.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
-    messages: [
-      { role: "system", content: params.system },
-      { role: "user", content: params.userMessage },
-    ],
+    messages: [{ role: "system", content: params.system }, ...params.messages],
     tools: params.tools,
   });
 

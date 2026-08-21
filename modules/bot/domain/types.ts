@@ -16,6 +16,11 @@ export interface RetrievalResult {
   hasGroundedContext: boolean;
 }
 
+export interface ChatHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export type BotAnswer =
   | { type: "answer"; text: string }
-  | { type: "escalate"; question: string; email?: string };
+  | { type: "escalate"; question: string; email?: string; acknowledgment: string };

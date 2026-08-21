@@ -51,6 +51,11 @@ module's `application/` layer. It must never import another module's `infrastruc
 If you're tempted to call Supabase straight from a route handler, stop — add or use the
 application-layer use-case instead.
 
+**Cross-module calls:** a module's `application/` layer may call another module's
+`application/` layer directly (e.g. `chat.application.sendMessage()` calling
+`users.application.createLead()` on escalation) — that's the correct integration point between
+modules. It must never reach into another module's `domain/` or `infrastructure/`.
+
 `bot` is intentionally the most built-out module (chunking/embeddings/retrieval/data acquisition
 live here); `auth` is intentionally the thinnest in v1 — see the README trade-offs section for
 why.
@@ -92,3 +97,13 @@ Don't re-litigate these mid-implementation; they were decided during scoping:
 - Don't fabricate Cadre AI facts (pricing, dates, client outcomes) that aren't grounded in the
   ingested content — if it's not in the KB, the bot escalates instead of guessing.
 - Don't skip the review checkpoint between plan.md phases.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
