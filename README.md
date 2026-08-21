@@ -140,6 +140,30 @@ Ordered roughly by what I'd do first if this went to production:
    the gate-blocks-history interaction found in `specs/03-chat-api-escalation.md` — not a
    gate-level patch, which would either reintroduce hallucination risk or just be this item done
    under a different name.
+
+   **Design sketch:** make the gate two-stage rather than one-shot. Stage 1 stays exactly as it
+   is today (embed the latest message alone — cheap, and already measured to work well for the
+   self-contained majority of queries). Only if stage 1 fails *and* the conversation has prior
+   history, try stage 2: retrieve again with a history-enriched query (naive concatenation of
+   recent turns + the message, or an LLM-rewritten standalone question — e.g. "what about real
+   estate?" + "which industries do you serve?" → "does Cadre AI serve the real estate
+   industry?"). Escalate only if stage 2 also fails. This keeps the fast/cheap path untouched for
+   most turns and only pays the extra cost on the ambiguous minority.
+
+   **Prerequisites before building this** (not just "it would be nice"): (a) the per-turn
+   observability item above, to actually measure how much gate-triggered escalation volume is
+   follow-up-ambiguity vs. genuinely unanswerable — building this blind isn't justified; (b) the
+   eval suite item below, in place *first*, so precision/recall on the enriched-query path can be
+   verified rather than assumed; (c) a latency/cost budget check if the rewrite step uses an
+   extra model call, since that's a second round-trip on the retry path.
+
+   **Not the same lever as chunking.** Document-based/semantic chunking (item 7 above) improves
+   what content is retrievable — it doesn't fix this, because the ambiguity lives in the query
+   ("what about real estate?" alone carries almost no signal pointing at "industries we serve"),
+   not in how the KB is chunked. A related-but-distinct lever that could complement this: hybrid
+   dense + sparse retrieval (vector similarity plus keyword/BM25 matching), where chunk-level
+   topic metadata could catch a literal keyword match even when semantic similarity is weak due
+   to a short, ambiguous query. That's its own separate decision, not a byproduct of this one.
 9. **PII hardening** — column-level encryption (pgcrypto) for `leads.email`, a retention/TTL
    policy or manual right-to-delete flow, and evaluating data-retention options on OpenRouter
    and its upstream providers once there's a real admin surface using this data.
