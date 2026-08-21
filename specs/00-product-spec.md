@@ -47,8 +47,16 @@ source list):
    employee use of consumer AI tools with sensitive data, and positions Cadre's strategy work as
    the fix.
 6. **Booking a strategist call** — CTA to `/contact` ("Talk to an AI Strategist").
-7. **Case studies** — high-level only (e.g., iSupport, Avanti Capital Partners, TZP), points to
-   `/case-studies` for detail rather than fabricating outcomes.
+7. **Case studies** — high-level only, drawn from the real `/case-studies` page. Client company
+   names are not disclosed there (only industry + a named contact's title/quote), so the bot
+   never invents a company name — it describes the problem/solution/result by industry, matching
+   the source. Points to `/case-studies` for full detail.
+
+**Correction (post-discovery):** an earlier, coarser fetch of the homepage summarized case
+studies with specific client names (iSupport, Avanti Capital Partners, TZP). A direct fetch of
+`/case-studies` shows client names are actually undisclosed there — only industry and a named
+contact's quote. The KB is built from the more authoritative page-level fetch; the earlier names
+are not used anywhere.
 
 ## Escalation policy
 

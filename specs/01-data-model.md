@@ -1,7 +1,18 @@
 # Spec 01: Data Model & Supabase Schema
 
-Status: ✅ Implemented and verified locally (migration `20260820000000_init.sql`).
+Status: ✅ Implemented and verified locally (migrations `20260820000000_init.sql`,
+`20260820000001_grants.sql` — see addendum).
 Modules: `bot`, `chat`, `users` (schema only — no application logic here).
+
+## Addendum: missing `service_role` grants (found during Phase 2)
+
+`enable row level security` plus RLS bypass for `service_role` isn't sufficient on its own —
+Postgres still requires base object privileges (`GRANT`) separately from RLS policies, and a
+bare `create table` doesn't grant these automatically on a local Supabase instance. Ingestion
+failed with `permission denied for table documents` until `20260820000001_grants.sql` explicitly
+granted `select, insert, update, delete` on all 5 tables to `service_role`. This was a gap in
+the original migration, not a new decision — fixed rather than re-litigated. `anon`/
+`authenticated` still have no grants, so the deny-all RLS intent is unaffected.
 
 ## Problem
 

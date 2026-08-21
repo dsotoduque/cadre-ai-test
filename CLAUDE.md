@@ -59,9 +59,12 @@ why.
 
 Don't re-litigate these mid-implementation; they were decided during scoping:
 
-- **Chat model:** Claude Haiku 4.5, called via the Anthropic SDK, with tool-calling for
-  `escalate_to_human`.
-- **Embeddings:** OpenAI `text-embedding-3-small`.
+- **Model access:** OpenRouter (`OPENROUTER_API_KEY`, one of Cadre AI's own key partners), not
+  direct OpenAI/Anthropic keys — verified to proxy both endpoints correctly with the same
+  underlying models. One key instead of two.
+- **Chat model:** `anthropic/claude-haiku-4.5` via OpenRouter's OpenAI-compatible
+  `chat.completions` endpoint, with function-calling for `escalate_to_human`.
+- **Embeddings:** `openai/text-embedding-3-small` via OpenRouter, 1536 dimensions.
 - **Vector store:** Supabase pgvector, similarity search via a `match_documents` RPC function.
 - **Escalation:** persists to the `leads` table only. No outbound email/notification in v1.
 - **Auth:** no login for chatbot visitors. Admin view is protected by a simple env-secret gate in

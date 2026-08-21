@@ -9,10 +9,11 @@ checkpoint is confirmed. Methodology details live in `CLAUDE.md`.
 |---|---|---|---|---|
 | 00 | [00-product-spec.md](specs/00-product-spec.md) | all | ✅ Approved | Product scope, escalation policy, acceptance scenarios |
 | 01 | [01-data-model.md](specs/01-data-model.md) | bot, chat, users | ✅ Verified locally | Supabase schema, RLS, pgvector setup |
-| 02 | 02-rag-pipeline.md | bot | ⬜ Not started — next | Ingestion, chunking strategy, embeddings, retrieval, system prompt |
-| 03 | 03-chat-api-escalation.md | chat, users | ⬜ Not started | `/api/chat`, conversation persistence, escalation wiring |
+| 02 | [02-rag-pipeline.md](specs/02-rag-pipeline.md) | bot | ✅ Verified locally | Ingestion, chunking strategy, embeddings, retrieval, escalation logic, system prompt |
+| 03 | 03-chat-api-escalation.md | chat, users | ⬜ Not started — next | `/api/chat`, conversation persistence, escalation wiring |
 | 04 | 04-admin.md | auth | ⬜ Not started | Env-secret gate + leads view |
 | 05 | 05-ui-deploy.md | — | ⬜ Not started | Chat widget UI + Vercel/Supabase deploy |
 
-**Current checkpoint:** `01-data-model.md` is implemented and verified locally. Next: write and
-review `specs/02-rag-pipeline.md` before implementing ingestion/chunking/retrieval.
+**Current checkpoint:** `02-rag-pipeline.md` is implemented and verified locally (all 10
+acceptance scenarios pass). Next: write and review `specs/03-chat-api-escalation.md` before
+wiring `/api/chat`.
