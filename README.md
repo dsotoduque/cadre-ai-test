@@ -64,6 +64,38 @@ OpenRouter, which routes them to OpenAI (embedding) and Anthropic (generation) r
 This is disclosed here explicitly — nothing about using Supabase implies the data stays inside
 it, and OpenRouter itself is a fourth party in that path, not just a pass-through.
 
+### Retrieval calibration: the similarity threshold
+
+`match_threshold` is the trigger for the deterministic escalation gate (`specs/02-rag-pipeline.md`)
+— too high and the bot escalates questions it actually has good context for (defeats the point
+of RAG); too low and irrelevant chunks leak into the system prompt as if they were grounded
+context (risks answers that look grounded but aren't). It can't be picked analytically — it's
+specific to the embedding model *and* this KB's content, so it was calibrated against real data
+instead of guessed.
+
+**Method:** query the pipeline at `match_threshold = 0` (no filtering) with a handful of control
+questions — some clearly on-topic, some clearly off-topic — and look at where the raw cosine
+similarity scores actually separate.
+
+**What was measured** (`openai/text-embedding-3-small` via OpenRouter, against this KB):
+
+| Query type | Example | Similarity range |
+|---|---|---|
+| Off-topic | "what's the weather like today", "favorite pizza topping" | ~0.05–0.06 |
+| On-topic | "what does Cadre AI do?", "how do I book a call?" | ~0.35 (weakest relevant match) to ~0.90 (near-exact title match) |
+
+The gap between noise (~0.06) and signal (~0.35+) is wide and clean for this KB. **Chosen value:
+`match_threshold = 0.35`** — comfortably above the noise ceiling, comfortably below where real
+content starts, so it doesn't cut off genuine-but-imperfect matches.
+
+**This is not a one-time constant.** The original starting guess (0.75, picked before any real
+data existed) excluded almost all genuinely relevant content — it wasn't just slightly off, it
+was calibrated against an intuition about cosine similarity ("close to 1 = relevant") that
+doesn't hold for this model/content combination. If the KB's size, topic breadth, or writing
+style changes substantially, or the embedding model changes, this measurement should be redone
+rather than assumed to still hold — see the eval-suite roadmap item below for making that
+repeatable instead of manual.
+
 ## Scope decisions and trade-offs
 
 | Decision | In v1 | Deferred | Why |
