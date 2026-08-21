@@ -4,4 +4,5 @@ export interface Lead {
   question: string;
   email: string | null;
   status: "new" | "contacted";
+  createdAt: string;
 }
