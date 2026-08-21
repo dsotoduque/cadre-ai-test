@@ -157,6 +157,35 @@ Ordered roughly by what I'd do first if this went to production:
    verified rather than assumed; (c) a latency/cost budget check if the rewrite step uses an
    extra model call, since that's a second round-trip on the retry path.
 
+   **Why the sequencing is a hard requirement, not caution for its own sake:** a false negative
+   here (gate escalates something answerable) costs a stray `leads` row — bounded, cheap, already
+   measured. A false positive from a hastily-built stage 2 (history-enriched retrieval surfaces
+   *something* above threshold that isn't actually relevant, and the model answers confidently
+   from it) is a categorically worse failure — a plausible-sounding wrong answer, the exact
+   failure mode the deterministic gate exists to prevent, and one that doesn't exist in the
+   system today at all. That asymmetry matters more here than in a generic chatbot: Cadre AI's
+   own pitch is disciplined AI governance, so a bot that occasionally fabricates with confidence
+   is reputational damage to the product itself, not just a UX rough edge. Volume alone can never
+   justify shipping this — a low false-positive rate is a non-negotiable gate, not a nice-to-have.
+
+   **Concrete measurement plan** for deciding build-vs-leave-as-is:
+   - *Passive logging* (cheap, always on) per gate-triggered turn: whether prior conversation
+     history existed, and the top similarity score even when it didn't clear the threshold (not
+     just pass/fail). From this: **eligible volume** = % of gate escalations with history present
+     (if small, stop here — not worth building) and **near-miss ratio** = % of those with a top
+     score close to 0.35 (e.g. 0.28–0.34) vs. far below it (a near-miss is a real stage-2
+     candidate; a score near the 0.05–0.06 noise floor means enriching the query won't help no
+     matter how it's phrased).
+   - *Shadow-mode experiment* (only if the passive numbers look promising): run stage 2 offline
+     against logged eligible cases — generate the hypothetical answer without showing it to any
+     user — and label each as grounded/correct or plausible-but-wrong. From this: **recovery
+     rate** (% of eligible cases stage 2 actually resolves correctly) and, critically, **false-
+     positive rate** (% of stage-2 hits that are wrong when reviewed).
+   - **Decision rule:** build only if eligible volume is meaningful *and* recovery rate is high
+     *and* the false-positive rate is close to zero. If false-positive rate isn't close to zero,
+     leave the gap as-is regardless of volume — per the asymmetry above, recurrence doesn't buy
+     down that specific risk.
+
    **Not the same lever as chunking.** Document-based/semantic chunking (item 7 above) improves
    what content is retrievable — it doesn't fix this, because the ambiguity lives in the query
    ("what about real estate?" alone carries almost no signal pointing at "industries we serve"),
