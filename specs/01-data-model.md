@@ -4,6 +4,18 @@ Status: ✅ Implemented and verified locally (migrations `20260820000000_init.sq
 `20260820000001_grants.sql` — see addendum).
 Modules: `bot`, `chat`, `users` (schema only — no application logic here).
 
+## Addendum: local vs. cloud RLS enforcement differs at the HTTP layer (found during deploy)
+
+On the local Supabase instance, an anon-key request to a deny-all table returns `401 permission
+denied` (no base `GRANT` exists for `anon`). On Supabase Cloud, the same request returns
+`200 []` — cloud projects grant broad base `SELECT`/etc. to `anon`/`authenticated` by default at
+the schema level, and RLS (zero policies, as configured here) is what actually filters every row
+out. **Verified this is still secure, not just superficially quiet:** inserted a real `leads` row
+via `service_role`, then confirmed an `anon`-key read returns `[]`, not the row. Both
+environments result in zero accessible rows for `anon`/`authenticated` — they just signal "no
+access" differently (401 vs. an empty result set). Documented so a future 200 response isn't
+mistaken for a policy gap during review.
+
 ## Addendum: missing `service_role` grants (found during Phase 2)
 
 `enable row level security` plus RLS bypass for `service_role` isn't sufficient on its own —
