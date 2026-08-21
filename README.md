@@ -148,6 +148,31 @@ Ordered roughly by what I'd do first if this went to production:
 8. **Eval suite for the RAG answers** — a fixed set of Q&A pairs (seeded from the acceptance
    criteria in `specs/00-product-spec.md`) run against the pipeline on every KB content change.
 
+## Open questions — TO VALIDATE
+
+Not a decision, not a roadmap commitment — genuinely unresolved, needs investigation before it's
+either of those.
+
+**Prompt/context caching.** Two candidate cache breakpoints in `bot/infrastructure/llm/`:
+1. The fixed instruction portion of the system prompt (identical on every request — the safe,
+   always-applicable candidate).
+2. Instructions + `<retrieved_context>` together — bigger savings, but the cache only hits when
+   two requests retrieve the exact same top-k chunk set, which depends on how often real users
+   ask near-duplicate FAQ-style questions.
+
+Purely an infrastructure-layer concern if adopted — doesn't touch `application/` or `domain/`,
+consistent with the module boundaries in `CLAUDE.md`.
+
+What needs to be validated before this becomes a real decision either way:
+- Whether Anthropic's `cache_control` passes through correctly via OpenRouter's OpenAI-compatible
+  `chat.completions` endpoint for `anthropic/claude-haiku-4.5` — not yet confirmed empirically
+  (unlike the embeddings and tool-calling routes, which were verified directly; see
+  `specs/02-rag-pipeline.md`'s implementation notes for that methodology).
+- Whether it's actually applicable to v1 as built (single-turn, no conversation history in the
+  prompt — short-lived prompt per request) or whether it only becomes worth doing once multi-turn
+  history is added (`specs/00`'s retrieval-query-scope trade-off, deferred to v2) and/or FAQ
+  repeat-question volume is high enough for the cache-write cost to pay off.
+
 ## Running locally
 
 ```bash
