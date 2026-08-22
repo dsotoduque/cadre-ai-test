@@ -15,5 +15,15 @@ checkpoint is confirmed. Methodology details live in `CLAUDE.md`.
 | 05 | [05-ui-deploy.md](specs/05-ui-deploy.md) | — | ✅ Deployed | Chat widget UI + Vercel/Supabase deploy — live at https://test-cadre.vercel.app |
 
 **Current checkpoint:** All 6 specs (00-05) are implemented, verified, and deployed. The app is
-live at https://test-cadre.vercel.app. Remaining work is Phase 9 (polish) from the original
-plan — commit hygiene review, and confirming this roadmap matches what was actually built.
+live at https://test-cadre.vercel.app.
+
+**Phase 9 (polish) — done.** Commit hygiene review: clean linear history (16 commits), no secrets
+in `git log -p` history, working tree clean, `.gitignore` covers all local/cloud env files.
+Verification: `tsc --noEmit`, `eslint`, and `next build` all pass clean. Found and fixed two
+doc/build inconsistencies while cross-checking the README against the actual implementation:
+the Request Flow section claimed the API response streams to the client, which contradicts the
+explicit no-streaming decision in `specs/02-rag-pipeline.md` and the actual (non-streaming)
+`/api/chat` implementation; and the Scaling & hardening roadmap's numbered list had drifted out
+of sequence (9, 9, 7, 8) after edits. Also removed the unused default Next.js scaffold SVGs from
+`public/` (never referenced by `app/page.tsx`). No other drift found — the rest of the README,
+CLAUDE.md, and specs match what's actually built and deployed.

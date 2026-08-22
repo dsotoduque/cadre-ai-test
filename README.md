@@ -59,7 +59,8 @@ them — the anon key used by the browser never touches those tables directly.
    context, clearly delimited as data) and calls Claude Haiku 4.5, with `escalate_to_human`
    exposed as a tool.
 5. If the model calls the escalation tool, `chat` hands off to `users.application.createLead()`.
-6. Response streams back to the client.
+6. Response returns to the client as a single JSON payload — no streaming in v1, see
+   `specs/02-rag-pipeline.md` for why.
 
 **Third parties in the data path:** the query text and full conversation turns are sent to
 OpenRouter, which routes them to OpenAI (embedding) and Anthropic (generation) respectively.
@@ -198,13 +199,13 @@ Ordered roughly by what I'd do first if this went to production:
 9. **PII hardening** — column-level encryption (pgcrypto) for `leads.email`, a retention/TTL
    policy or manual right-to-delete flow, and evaluating data-retention options on OpenRouter
    and its upstream providers once there's a real admin surface using this data.
-9. **Real auth for `/admin`** — swap the env-secret gate for Supabase Auth + role check once
-   there's more than one internal viewer.
-7. **Multi-tenant KB** — because `bot` is already isolated behind a clean module boundary, adding
-   a second client's knowledge base later is a matter of scoping `document_chunks` by tenant, not
-   a rewrite.
-8. **Eval suite for the RAG answers** — a fixed set of Q&A pairs (seeded from the acceptance
-   criteria in `specs/00-product-spec.md`) run against the pipeline on every KB content change.
+10. **Real auth for `/admin`** — swap the env-secret gate for Supabase Auth + role check once
+    there's more than one internal viewer.
+11. **Multi-tenant KB** — because `bot` is already isolated behind a clean module boundary, adding
+    a second client's knowledge base later is a matter of scoping `document_chunks` by tenant, not
+    a rewrite.
+12. **Eval suite for the RAG answers** — a fixed set of Q&A pairs (seeded from the acceptance
+    criteria in `specs/00-product-spec.md`) run against the pipeline on every KB content change.
 
 ## Open questions — TO VALIDATE
 
